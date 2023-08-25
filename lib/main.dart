@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'home_page.dart';
-import 'telemetry_page.dart';
-import 'control_page.dart';
+import 'home_page/home_page.dart';
+import 'telemetry_page/telemetry_page.dart';
+import 'control_page/control_page.dart';
 
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bluez/bluez.dart';
-// import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -12,10 +12,8 @@ class _HomePageState extends State<HomePage> {
   Set<BlueZDevice> devices = {};
   var client = BlueZClient();
   bool scanning = false;
-  bool paired = false;
-  bool connected = false;
 
-  void pair(BlueZDevice device) async {
+  Future<void> pair(BlueZDevice device) async {
     var adapter = client.adapters[0];
     // await adapter.stopDiscovery();
 
@@ -28,24 +26,31 @@ class _HomePageState extends State<HomePage> {
 
     if (device.paired) {
       print('Device ${device.address} already paired');
-      await client.close();
+      // await client.close();
       return;
     }
 
     device.propertiesChanged.listen((properties) async {
       if (device.paired) {
         print('Device ${device.address} successfully paired');
-        await client.close();
+        // await client.close();
         return;
       }
     });
     await device.pair();
+    setState(() {});
   }
 
-  void startScan() async {
+  Future<void> startScan() async {
+    setState(() {
+      scanning = true;
+    });
     await client.connect();
 
     if (client.adapters.isEmpty) {
+      setState(() {
+        scanning = false;
+      });
       await client.close();
       return Future.error('No Bluetooth adapters found');
     }
@@ -67,10 +72,17 @@ class _HomePageState extends State<HomePage> {
     await adapter.startDiscovery();
   }
 
-  void stopScan() async {
+  Future<void> stopScan() async {
+    setState(() {
+      scanning = false;
+    });
     var adapter = client.adapters[0];
     await adapter.stopDiscovery();
   }
+
+  // Future<void> connect(BlueZDevice device) async {
+  //   await device.connect();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -94,13 +106,7 @@ class _HomePageState extends State<HomePage> {
                 IconButton(
                   icon: scanning ? Icon(Icons.stop) : Icon(Icons.refresh),
                   onPressed: () => setState(() {
-                    if (!scanning) {
-                      scanning = true;
-                      startScan();
-                    } else {
-                      scanning = false;
-                      stopScan();
-                    }
+                    scanning ? stopScan() : startScan();
                   }),
                 ),
               ],
@@ -116,9 +122,74 @@ class _HomePageState extends State<HomePage> {
                         Text('${device.name}'),
                         SizedBox(width: 10),
                         Text('(${device.address})', style: addressStyle),
+                        SizedBox(width: 10),
+                        device.paired ?
+                          SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: Icon(Icons.key),
+                          )
+                          :
+                          SizedBox(
+                            width: 0,
+                            height: 30,
+                          ),
+                        device.connected ?
+                          SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: Icon(Icons.bluetooth_connected),
+                          )
+                          :
+                          SizedBox(
+                            width: 0,
+                            height: 30,
+                          ),
                       ],
                     ),
-                    onTap: () { pair(device); },
+                    onTap: () async {
+                      if (!device.paired) {
+                        await pair(device);
+                      } else {
+                        var services = device.gattServices;
+                        if (services.isEmpty) {
+                          print('No GATT services');
+                          return;
+                        }
+                        print('Device ${device.alias}');
+                        await device.connect();
+                        for (var service in device.gattServices) {
+                          print('  Service ${service.uuid}');
+                          for (var characteristic in service.characteristics) {
+                            String characteristicValue;
+                            try {
+                              characteristicValue = '${await characteristic.readValue()}';
+                            } on BlueZNotPermittedException {
+                              characteristicValue = '<write only>';
+                            } on BlueZException catch (e) {
+                              characteristicValue = '<${e.message}>';
+                            } catch (e) {
+                              characteristicValue = '<$e>';
+                            }
+                            print(
+                                '    Characteristic ${characteristic.uuid} = $characteristicValue');
+                            for (var descriptor in characteristic.descriptors) {
+                              String descriptorValue;
+                              try {
+                                descriptorValue = '${await descriptor.readValue()}';
+                              } on BlueZNotPermittedException {
+                                descriptorValue = '<write only>';
+                              } on BlueZException catch (e) {
+                                descriptorValue = '<${e.message}>';
+                              } catch (e) {
+                                descriptorValue = '<$e>';
+                              }
+                              print('      Descriptor ${descriptor.uuid} = $descriptorValue');
+                            }
+                          }
+                        }
+                      }
+                    },
                   ),
                 ),
             SizedBox(height: 10),
