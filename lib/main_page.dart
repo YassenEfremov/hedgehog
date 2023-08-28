@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:scoped_model/scoped_model.dart';
 
-import './BackgroundCollectedPage.dart';
-import './BackgroundCollectingTask.dart';
-import './ChatPage.dart';
+// import './BackgroundCollectedPage.dart';
+// import './BackgroundCollectingTask.dart';
+// import './ChatPage.dart';
 import './DiscoveryPage.dart';
 import './SelectBondedDevicePage.dart';
 
@@ -24,6 +24,28 @@ class MainPage extends StatefulWidget {
 
 class _MainPage extends State<MainPage> {
   int currentPageIndex = 0;
+  BluetoothDevice? selectedDevice;
+  BluetoothConnection? connection;
+
+  BluetoothDevice? getSelectedDevice() {
+    return selectedDevice;
+  }
+
+  void setSelectedDevice(BluetoothDevice newDevice) {
+    setState(() {
+      selectedDevice = newDevice;
+    });
+  }
+
+  BluetoothConnection? getConnection() {
+    return connection;
+  }
+
+  void setConnection(BluetoothConnection newConnection) {
+    setState(() {
+      connection = newConnection;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +54,9 @@ class _MainPage extends State<MainPage> {
         body: IndexedStack(
           index: currentPageIndex,
           children: [
-            HomePage(),
-            TelemetryPage(),
-            ControlPage(),
+            HomePage(getSelectedDevice, setSelectedDevice, getConnection, setConnection),
+            TelemetryPage(getConnection),
+            ControlPage(getConnection),
           ],
         ),
         bottomNavigationBar: NavigationBar(
@@ -54,7 +76,6 @@ class _MainPage extends State<MainPage> {
           ],
           selectedIndex: currentPageIndex,
           onDestinationSelected: (index) {
-            
             setState(() {
               currentPageIndex = index;
             });
