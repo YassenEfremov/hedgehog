@@ -150,22 +150,23 @@ class _HomePage extends State<HomePage> {
             // ),
             _bluetoothState.isEnabled ?
               Expanded(
-                child: Column(
+                child: Flex(
+                  direction: MediaQuery.of(context).orientation == Orientation.portrait ? Axis.vertical : Axis.horizontal,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStatePropertyAll<Color>(Colors.lightBlue.shade500),
+                      style: ElevatedButton.styleFrom(
+                        shape: CircleBorder(),
+                        fixedSize: Size(150, 150),
+                        backgroundColor: Colors.lightBlue.shade500
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Icon(Icons.explore),
-                            SizedBox(height: 10),
-                            const Text('Pair \nwith device', textAlign: TextAlign.center),
-                          ],
-                        ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.explore, size: 50),
+                          SizedBox(height: 10),
+                          const Text('Pair \nwith cubli', textAlign: TextAlign.center),
+                        ],
                       ),
                       onPressed: () async {
                         await Location().requestService();
@@ -185,34 +186,36 @@ class _HomePage extends State<HomePage> {
                         }
                       },
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(width: 20, height: 20),
                     ElevatedButton(
                       style: widget.getConnectedDevice() == null ?
-                        ButtonStyle(
-                          backgroundColor: MaterialStatePropertyAll<Color>(Colors.blueGrey.shade400),
+                        ElevatedButton.styleFrom(
+                          shape: CircleBorder(),
+                          fixedSize: Size(150, 150),
+                          backgroundColor: Colors.blueGrey.shade400
                         )
                       :
-                        null,
+                        ElevatedButton.styleFrom(
+                          shape: CircleBorder(),
+                          fixedSize: Size(150, 150),
+                          backgroundColor: Colors.lightBlue.shade900
+                        ),
                       child: widget.getConnectedDevice() == null ?
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              Icon(Icons.bluetooth_searching),
-                            SizedBox(height: 10),
-                              const Text('Connect \nto paired device', textAlign: TextAlign.center),
-                            ],
-                          ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.bluetooth_searching, size: 50),
+                          SizedBox(height: 10),
+                            const Text('Connect \nto cubli', textAlign: TextAlign.center),
+                          ],
                         )
-                        :
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              Icon(Icons.bluetooth_connected),
-                              Text('Connected to:\n${widget.getConnectedDevice()!.name}', textAlign: TextAlign.center),
-                            ],
-                          ),
+                      :
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.bluetooth_connected, size: 50),
+                            Text('Connected to:\n${widget.getConnectedDevice()!.name}', textAlign: TextAlign.center),
+                          ],
                         ),
                       onPressed: () async {
                         final BluetoothDevice? selectedDevice =
