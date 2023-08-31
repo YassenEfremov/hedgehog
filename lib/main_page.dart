@@ -46,13 +46,15 @@ class _MainPage extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: currentPageIndex,
-        children: [
-          HomePage(getConnection, setConnection, getConnectedDevice, setConnectedDevice),
-          TelemetryPage(getConnection),
-          ControlPage(getConnection),
-        ],
+      body: SafeArea(
+        child: IndexedStack(
+          index: currentPageIndex,
+          children: [
+            HomePage(getConnection, setConnection, getConnectedDevice, setConnectedDevice),
+            TelemetryPage(getConnection),
+            ControlPage(getConnection),
+          ],
+        ),
       ),
       bottomNavigationBar: AnimatedSize(
         curve: Curves.fastOutSlowIn,
