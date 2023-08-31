@@ -3,25 +3,25 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
-import './BluetoothDeviceListEntry.dart';
+import '../BluetoothDeviceListEntry.dart';
 
-class DiscoveryPage extends StatefulWidget {
+
+class PairPage extends StatefulWidget {
   /// If true, discovery starts on page start, otherwise user must press action button.
   final bool start;
 
-  const DiscoveryPage({this.start = true});
+  const PairPage({this.start = true});
 
   @override
-  _DiscoveryPage createState() => new _DiscoveryPage();
+  _PairPage createState() => _PairPage();
 }
 
-class _DiscoveryPage extends State<DiscoveryPage> {
+class _PairPage extends State<PairPage> {
   StreamSubscription<BluetoothDiscoveryResult>? _streamSubscription;
-  List<BluetoothDiscoveryResult> results =
-      List<BluetoothDiscoveryResult>.empty(growable: true);
+  List<BluetoothDiscoveryResult> results = List<BluetoothDiscoveryResult>.empty(growable: true);
   bool isDiscovering = false;
 
-  _DiscoveryPage();
+  _PairPage();
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _DiscoveryPage extends State<DiscoveryPage> {
     }
   }
 
-  void _restartDiscovery() {
+  void _restartDiscovery() async {
     setState(() {
       results.clear();
       isDiscovering = true;
@@ -46,12 +46,14 @@ class _DiscoveryPage extends State<DiscoveryPage> {
     _streamSubscription =
         FlutterBluetoothSerial.instance.startDiscovery().listen((r) {
       setState(() {
-        final existingIndex = results.indexWhere(
-            (element) => element.device.address == r.device.address);
-        if (existingIndex >= 0)
+        final existingIndex = results.indexWhere((element) => element.device.address == r.device.address);
+        if (existingIndex >= 0) {
           results[existingIndex] = r;
-        else
-          results.add(r);
+        } else {
+          if (r.device.name != null) {
+            results.add(r);
+          }
+        }
       });
     });
 
@@ -104,23 +106,21 @@ class _DiscoveryPage extends State<DiscoveryPage> {
           return BluetoothDeviceListEntry(
             device: device,
             rssi: result.rssi,
-            onTap: () {
-              Navigator.of(context).pop(result.device);
-            },
-            onLongPress: () async {
+            onTap: () async {
+              // Navigator.of(context).pop(result.device);
               try {
-                bool bonded = false;
+                bool paired = false;
                 if (device.isBonded) {
-                  print('Unbonding from ${device.address}...');
+                  print('Unpairing from ${device.address}...');
                   await FlutterBluetoothSerial.instance
                       .removeDeviceBondWithAddress(address);
-                  print('Unbonding from ${device.address} has succed');
+                  print('Unpairing from ${device.address} has succed');
                 } else {
-                  print('Bonding with ${device.address}...');
-                  bonded = (await FlutterBluetoothSerial.instance
+                  print('Pairing with ${device.address}...');
+                  paired = (await FlutterBluetoothSerial.instance
                       .bondDeviceAtAddress(address))!;
                   print(
-                      'Bonding with ${device.address} has ${bonded ? 'succed' : 'failed'}.');
+                      'Pairing with ${device.address} has ${paired ? 'succeeded' : 'failed'}.');
                 }
                 setState(() {
                   results[results.indexOf(result)] = BluetoothDiscoveryResult(
@@ -128,7 +128,7 @@ class _DiscoveryPage extends State<DiscoveryPage> {
                         name: device.name ?? '',
                         address: address,
                         type: device.type,
-                        bondState: bonded
+                        bondState: paired
                             ? BluetoothBondState.bonded
                             : BluetoothBondState.none,
                       ),
@@ -139,7 +139,7 @@ class _DiscoveryPage extends State<DiscoveryPage> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: const Text('Error occured while bonding'),
+                      title: const Text('Error occured while pairing'),
                       content: Text("${ex.toString()}"),
                       actions: <Widget>[
                         new TextButton(

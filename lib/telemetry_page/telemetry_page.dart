@@ -1,13 +1,11 @@
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:scoped_model/scoped_model.dart';
+// import 'package:scoped_model/scoped_model.dart';
 
 // import '../BackgroundCollectedPage.dart';
 // import '../BackgroundCollectingTask.dart';
-import '../SelectBondedDevicePage.dart';
 
 // import './helpers/LineChart.dart';
 
@@ -19,13 +17,14 @@ class TelemetryPage extends StatefulWidget {
   TelemetryPage(this.getConnection);
 
   @override
-  _TelemetryPage createState() => new _TelemetryPage();
+  _TelemetryPage createState() => _TelemetryPage();
 }
 
 class _TelemetryPage extends State<TelemetryPage> {
 
   bool connected = false;
-  String? rxData1;
+  double? angleX;
+  double? angleY;
 
   @override
   Widget build(BuildContext context) {
@@ -66,12 +65,8 @@ class _TelemetryPage extends State<TelemetryPage> {
 
       return ListView(
         children: <Widget>[
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text('$rxData1'),
-            )
-          ),
+          Text('x: ${angleX?.toStringAsFixed(2)}'),
+          Text('y: ${angleY?.toStringAsFixed(2)}'),
 
           // ListTile(title: const Text('Multiple connections example')),
           // ListTile(
@@ -160,34 +155,37 @@ class _TelemetryPage extends State<TelemetryPage> {
   // }
 
   void _onDataReceived(Uint8List data) {
-    // Allocate buffer for parsed data
-    int backspacesCounter = 0;
-    data.forEach((byte) {
-      if (byte == 8 || byte == 127) {
-        backspacesCounter++;
-      }
-    });
-    Uint8List buffer = Uint8List(data.length - backspacesCounter);
-    int bufferIndex = buffer.length;
+    // // Allocate buffer for parsed data
+    // int backspacesCounter = 0;
+    // data.forEach((byte) {
+    //   if (byte == 8 || byte == 127) {
+    //     backspacesCounter++;
+    //   }
+    // });
+    // Uint8List buffer = Uint8List(data.length - backspacesCounter);
+    // int bufferIndex = buffer.length;
 
-    // Apply backspace control character
-    backspacesCounter = 0;
-    for (int i = data.length - 1; i >= 0; i--) {
-      if (data[i] == 8 || data[i] == 127) {
-        backspacesCounter++;
-      } else {
-        if (backspacesCounter > 0) {
-          backspacesCounter--;
-        } else {
-          buffer[--bufferIndex] = data[i];
-        }
-      }
-    }
+    // // Apply backspace control character
+    // backspacesCounter = 0;
+    // for (int i = data.length - 1; i >= 0; i--) {
+    //   if (data[i] == 8 || data[i] == 127) {
+    //     backspacesCounter++;
+    //   } else {
+    //     if (backspacesCounter > 0) {
+    //       backspacesCounter--;
+    //     } else {
+    //       buffer[--bufferIndex] = data[i];
+    //     }
+    //   }
+    // }
 
-    // Create message if there is new line character
-    String dataString = String.fromCharCodes(buffer);
+    print(data);
+
+    final byteData = ByteData.sublistView(data);
+
     setState(() {
-      rxData1 = dataString;
+      angleX = byteData.getFloat32(0, Endian.little);
+      angleY = byteData.getFloat32(3, Endian.little);
     });
 
     // int index = buffer.indexOf(13);

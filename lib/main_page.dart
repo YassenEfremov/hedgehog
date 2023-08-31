@@ -1,14 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:scoped_model/scoped_model.dart';
+// import 'package:scoped_model/scoped_model.dart';
 
 // import './BackgroundCollectedPage.dart';
 // import './BackgroundCollectingTask.dart';
 // import './ChatPage.dart';
-import './DiscoveryPage.dart';
-import './SelectBondedDevicePage.dart';
 
 import 'home_page/home_page.dart';
 import 'telemetry_page/telemetry_page.dart';
@@ -19,21 +15,21 @@ import 'control_page/control_page.dart';
 
 class MainPage extends StatefulWidget {
   @override
-  _MainPage createState() => new _MainPage();
+  _MainPage createState() => _MainPage();
 }
 
 class _MainPage extends State<MainPage> {
   int currentPageIndex = 0;
-  BluetoothDevice? selectedDevice;
+  BluetoothDevice? connectedDevice;
   BluetoothConnection? connection;
 
-  BluetoothDevice? getSelectedDevice() {
-    return selectedDevice;
+  BluetoothDevice? getConnectedDevice() {
+    return connectedDevice;
   }
 
-  void setSelectedDevice(BluetoothDevice newDevice) {
+  void setConnectedDevice(BluetoothDevice? newDevice) {
     setState(() {
-      selectedDevice = newDevice;
+      connectedDevice = newDevice;
     });
   }
 
@@ -41,7 +37,7 @@ class _MainPage extends State<MainPage> {
     return connection;
   }
 
-  void setConnection(BluetoothConnection newConnection) {
+  void setConnection(BluetoothConnection? newConnection) {
     setState(() {
       connection = newConnection;
     });
@@ -49,17 +45,19 @@ class _MainPage extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: IndexedStack(
-          index: currentPageIndex,
-          children: [
-            HomePage(getSelectedDevice, setSelectedDevice, getConnection, setConnection),
-            TelemetryPage(getConnection),
-            ControlPage(getConnection),
-          ],
-        ),
-        bottomNavigationBar: NavigationBar(
+    return Scaffold(
+      body: IndexedStack(
+        index: currentPageIndex,
+        children: [
+          HomePage(getConnection, setConnection, getConnectedDevice, setConnectedDevice),
+          TelemetryPage(getConnection),
+          ControlPage(getConnection),
+        ],
+      ),
+      bottomNavigationBar: AnimatedSize(
+        curve: Curves.fastOutSlowIn,
+        duration: const Duration(milliseconds: 500),
+        child: NavigationBar(
           destinations: [
             NavigationDestination(
               icon: Icon(Icons.home),
@@ -80,7 +78,7 @@ class _MainPage extends State<MainPage> {
               currentPageIndex = index;
             });
           },
-          height: 60,
+          height: connection == null ? 0 : 60,
         ),
       ),
     );

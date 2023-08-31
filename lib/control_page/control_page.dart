@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:scoped_model/scoped_model.dart';
+// import 'package:scoped_model/scoped_model.dart';
 
 // import './helpers/LineChart.dart';
 
@@ -16,7 +15,7 @@ class ControlPage extends StatefulWidget {
   ControlPage(this.getConnection);
 
   @override
-  _ControlPage createState() => new _ControlPage();
+  _ControlPage createState() => _ControlPage();
 }
 
 class _ControlPage extends State<ControlPage> {
@@ -57,7 +56,12 @@ class _ControlPage extends State<ControlPage> {
                 ),
                 Align(
                   alignment: Alignment.center,
-                  child: Icon(Icons.hexagon, size: 200, color: Colors.black12)
+                  child: AnimatedRotation(
+                    turns: 365 * 24 * 60 * 60 / 12,
+                    duration: Duration(days: 365),
+                    // angle: 10 * (pi / 180),
+                    child: Icon(Icons.hexagon, size: 200, color: Colors.black12)
+                  )
                 ),
               ],
             ),
