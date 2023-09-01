@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -27,6 +28,9 @@ class _ControlPage extends State<ControlPage> {
   double K2_delta = 0.1;
   double K3_delta = 0.001;
 
+  double _angle = 0.0;
+  // double _delta_angle = 0.0;
+
   @override
   Widget build(BuildContext context) {
     if (widget.getConnection() == null) {
@@ -41,11 +45,11 @@ class _ControlPage extends State<ControlPage> {
         )
       );
     } else {
-      return Center(
+      return SingleChildScrollView(
         child: Column(
           children: [
             SizedBox(height: 20),
-            Text('Yaw'),
+            Text('Yaw', style: TextStyle(fontSize: 24)),
             Stack(
               alignment: Alignment.center,
               children: <Widget>[
@@ -54,97 +58,144 @@ class _ControlPage extends State<ControlPage> {
                   height: 300,
                   child: Image.asset('images/polar_coord_system.png')
                 ),
-                Align(
-                  alignment: Alignment.center,
-                  child: AnimatedRotation(
-                    turns: 365 * 24 * 60 * 60 / 12,
-                    duration: Duration(days: 365),
-                    // angle: 10 * (pi / 180),
-                    child: Icon(Icons.hexagon, size: 200, color: Colors.black12)
-                  )
-                ),
+                Transform.rotate(
+                    angle: _angle * (pi/180),
+                    child: Stack(
+                      alignment: Alignment.centerRight,
+                      children: [
+                        Icon(Icons.arrow_right_alt, size: 50),
+                        Container(
+                          width: 160,
+                          height: 160,
+                          decoration: ShapeDecoration(
+                            shape: StarBorder.polygon(sides: 6, rotation: 30),
+                            color: Colors.black12,
+                          ),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return GestureDetector(
+                                behavior: HitTestBehavior.translucent,
+                                onPanUpdate: (DragUpdateDetails details) {
+                                  Offset centerOfGestureDetector = Offset(
+                                    constraints.maxWidth / 2,
+                                    constraints.maxHeight / 2,
+                                  );
+                                  final touchPositionFromCenter = details.localPosition - centerOfGestureDetector;
+                                  print(touchPositionFromCenter.direction);
+                                  setState(() {
+                                    _angle = touchPositionFromCenter.direction;
+                                    _angle = (_angle * (180/pi)).roundToDouble();
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
+            ),
+            RichText(
+              text: TextSpan(
+                text: "Cubli will rotate by: ",
+                style: DefaultTextStyle.of(context).style,
+                children: <TextSpan>[
+                  TextSpan(text: '${(_angle).toStringAsFixed(2)}°', style: TextStyle(color: Colors.green)),
+                ],
+              ),
             ),
             SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            ElevatedButton(
+              onPressed: () {
+                _sendMessage(' ');
+              },
+              child: Text('Rotate!')
+            ),
+            SizedBox(height: 20),
+            ExpansionTile(
+              title: Text('Advanced'),
               children: [
-                Column(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('K1: ${K1.toStringAsFixed(1)}'),
-                    ElevatedButton(
-                      onPressed: () => setState(() => K1 += K1_delta),
-                      child: Icon(Icons.keyboard_arrow_up),
+                    Column(
+                      children: [
+                        Text('K1: ${K1.toStringAsFixed(1)}'),
+                        ElevatedButton(
+                          onPressed: () => setState(() => K1 += K1_delta),
+                          child: Icon(Icons.keyboard_arrow_up),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => setState(() => K1 -= K1_delta),
+                          child: Icon(Icons.keyboard_arrow_down),
+                        ),
+                        SizedBox(
+                          width: 50,
+                          child: TextFormField(
+                            keyboardType: TextInputType.number,
+                            initialValue: '$K1_delta',
+                          ),
+                        ),
+                      ],
                     ),
-                    ElevatedButton(
-                      onPressed: () => setState(() => K1 -= K1_delta),
-                      child: Icon(Icons.keyboard_arrow_down),
+                    SizedBox(width: 10),
+                    Column(
+                      children: [
+                        Text('K2: ${K2.toStringAsFixed(1)}'),
+                        ElevatedButton(
+                          onPressed: () => setState(() => K2 += K2_delta),
+                          child: Icon(Icons.keyboard_arrow_up),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => setState(() => K2 -= K2_delta),
+                          child: Icon(Icons.keyboard_arrow_down),
+                        ),
+                        SizedBox(
+                          width: 50,
+                          child: TextFormField(
+                            keyboardType: TextInputType.number,
+                            initialValue: '$K2_delta',
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(
-                      width: 50,
-                      child: TextFormField(
-                        keyboardType: TextInputType.number,
-                        initialValue: '$K1_delta',
-                      ),
+                    SizedBox(width: 10),
+                    Column(
+                      children: [
+                        Text('K3: ${K3.toStringAsFixed(3)}'),
+                        ElevatedButton(
+                          onPressed: () => setState(() => K3 += K3_delta),
+                          child: Icon(Icons.keyboard_arrow_up),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => setState(() => K3 -= K3_delta),
+                          child: Icon(Icons.keyboard_arrow_down),
+                        ),
+                        SizedBox(
+                          width: 50,
+                          child: TextFormField(
+                            keyboardType: TextInputType.number,
+                            initialValue: '$K3_delta',
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                SizedBox(width: 10),
-                Column(
-                  children: [
-                    Text('K2: ${K2.toStringAsFixed(1)}'),
-                    ElevatedButton(
-                      onPressed: () => setState(() => K2 += K2_delta),
-                      child: Icon(Icons.keyboard_arrow_up),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => setState(() => K2 -= K2_delta),
-                      child: Icon(Icons.keyboard_arrow_down),
-                    ),
-                    SizedBox(
-                      width: 50,
-                      child: TextFormField(
-                        keyboardType: TextInputType.number,
-                        initialValue: '$K2_delta',
-                      ),
-                    ),
-                  ],
+                IconButton(
+                  onPressed: () => setState(() {
+                    LEDon = !LEDon;
+                    _sendMessage(LEDon ? '1' : '0');
+                  }),
+                  icon: LEDon ?
+                    Icon(Icons.power_settings_new, color: Color.fromRGBO(255, 0, 0, 1.0))
+                    :
+                    Icon(Icons.power_settings_new, color: Color.fromRGBO(0, 255, 0, 1.0)),
                 ),
-                SizedBox(width: 10),
-                Column(
-                  children: [
-                    Text('K3: ${K3.toStringAsFixed(3)}'),
-                    ElevatedButton(
-                      onPressed: () => setState(() => K3 += K3_delta),
-                      child: Icon(Icons.keyboard_arrow_up),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => setState(() => K3 -= K3_delta),
-                      child: Icon(Icons.keyboard_arrow_down),
-                    ),
-                    SizedBox(
-                      width: 50,
-                      child: TextFormField(
-                        keyboardType: TextInputType.number,
-                        initialValue: '$K3_delta',
-                      ),
-                    ),
-                  ],
-                ),
+                Text('Toggle LED'),
               ],
             ),
-            SizedBox(height: 10),
-            IconButton(
-              onPressed: () => setState(() {
-                LEDon = !LEDon;
-                _sendMessage(LEDon ? '1' : '0');
-              }),
-              icon: LEDon ?
-                Icon(Icons.power_settings_new, color: Color.fromRGBO(255, 0, 0, 1.0))
-                :
-                Icon(Icons.power_settings_new, color: Color.fromRGBO(0, 255, 0, 1.0)),
-            ),
-            Text('Toggle LED'),
           ],
         ),
       );

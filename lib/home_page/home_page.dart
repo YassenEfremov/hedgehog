@@ -150,7 +150,7 @@ class _HomePage extends State<HomePage> {
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    shape: CircleBorder(),
+                    shape: StarBorder.polygon(sides: 6),
                     fixedSize: Size(150, 150),
                     backgroundColor: Colors.lightBlue.shade500
                   ),
@@ -184,13 +184,13 @@ class _HomePage extends State<HomePage> {
                 ElevatedButton(
                   style: widget.getConnectedDevice() == null ?
                     ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
+                    shape: StarBorder.polygon(sides: 6),
                       fixedSize: Size(150, 150),
                       backgroundColor: Colors.blueGrey.shade400
                     )
                   :
                     ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
+                    shape: StarBorder.polygon(sides: 6),
                       fixedSize: Size(150, 150),
                       backgroundColor: Colors.lightBlue.shade900
                     ),
